@@ -1,0 +1,54 @@
+======================================================================
+OPPORTUNITIES: C:\Users\Apollo\Desktop\excel\data\data.xlsx
+======================================================================
+Shape: 5,733 rows x 33 columns
+
+-- config mapping check --
+  id              -> opportunity_id         OK
+  name            -> name                   OK
+  category        -> category               OK
+  created         -> created_at             OK
+  archived        -> is_archived            OK
+  reward          -> Reward                 OK
+  scholarship     -> microscholarship       OK
+  lead_source     -> None                   (not mapped)
+
+-- columns --
+pk                           string          missing=  0.0% unique=4      ['Opportunity#', 'ting%22', '[""{\\""sk\\"":\\""PE#1766057859531E\\""']
+opportunity_id               string          missing=  0.0% unique=5733   ['Opportunity#000000000GBD0AX3Z6VYRG7R75', 'Opportunity#000000000GFKZ4N696ZF8V2WM8', 'Opportunity#0000000010ZFE0ZS22FA3Q62R4']
+Badge                        string          missing=  6.4% unique=5365   ['{"sk":"Badge#000000000G87VEXNYKKKTJTKE9","ref_prop', '{"sk":"Badge#000000000GAR6YSZ2B71HZJPM3","ref_prop', '{"sk":"Badge#000000000GGQG1DZ2TSSHR55G9","ref_prop']  <- JSON/list jesa lagta hai
+CareerAddOn                  string          missing= 84.2% unique=908    ['{"sk":"CareerAddOn#000000000G8FT85VQ6BFCT0M0K","re', '{"sk":"CareerAddOn#0000000010CPG6CP9DV2FSTSCJ","cr', '{"sk":"CareerAddOn#0000000010EMKESPPGF2RZNRRF","cr']  <- JSON/list jesa lagta hai
+category                     string          missing=  0.0% unique=13     ['Competition', 'Career', 'Internship']
+code                         string          missing=  0.1% unique=5729   ['M636023', 'A463411', 'A8848RT']
+Cohort                       string          missing=  0.4% unique=5711   ['{"sk":"Cohort#000000000GWJV80KJCAEP0JMCF","ref_pro', '{"sk":"Cohort#000000000GMAPG3GQV19H288WA","ref_pro', '{"sk":"Cohort#0000000010NSPP283G9WKVMTF1","created']  <- JSON/list jesa lagta hai
+created_at                   string          missing=  0.1% unique=16     ['1660000000000', '1710000000000', '1670000000000']
+currency_type                string          missing=  6.0% unique=7      ['USD', 'EUR', 'INR']
+current_editor               string          missing= 96.2% unique=18     ['amrit@vempower.org', '{}', '{"mansi@vempower.org":"All"}']  <- JSON/list jesa lagta hai
+DropoutTransaction           string          missing= 99.8% unique=13     ['%22value%22: %225%22 } ] } }', '{\\""sk\\"":\\""PE#1766057859531I\\""', '{"sk":"DropoutTransaction#0000000010PQDBBTEHTWHCQT']  <- JSON/list jesa lagta hai
+duration                     string          missing=  0.0% unique=108    ['300', '1', '30']
+duration_type                string          missing=  0.1% unique=17     ['minutes', 'years', 'weeks']
+Eligibility                  string          missing=  6.1% unique=5381   ['{"sk":"Eligibility#000000000GNQAM21BYCRBX5Z27","re', '{"sk":"Eligibility#000000000GNQAM21BYCRBX5Z27","re', '{"sk":"Eligibility#000000000GNQAM21BYCRBX5Z27","re']  <- JSON/list jesa lagta hai
+fee                          string          missing=  0.0% unique=105    ['0', '5', '89']
+image_link                   string          missing=  0.1% unique=3772   ['https://www.clipartkey.com/mpngs/m/56-563364_busin', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:AN', 'https://excelerate-profile-dev.s3.ap-south-1.amazo']
+is_archived                  string          missing= 90.8% unique=5      ['True', 'False', '%22maxWords%22: 500 }']
+is_auto_approve              string          missing=  0.0% unique=5      ['True', 'False', '%22key%22: %22whyDoYouWantToApplyForThisInternship']
+last_date_to_apply           string          missing=  0.1% unique=22     ['1690000000000', '1560000000000', '1700000000000']
+location                     string          missing= 25.2% unique=20     ['WFM', 'Virtual', 'Work From Home']
+long_description             string          missing=  6.0% unique=895    ['Your future is in your hands, truly. Ideate and in', 'At GlobalShala we believe that experiential learni', 'In this internship, you will help your sponsor imp']
+microscholarship             string          missing=  0.1% unique=162    ['500', '100', '0']
+modified_at                  string          missing=  0.0% unique=14     ['1690000000000', '1710000000000', '1780000000000']
+name                         string          missing=  0.1% unique=5570   ['Mini Saga 3.0', 'Virtual Internship Facilitator', 'Careerwishlist Automation 1710333189352']
+NotStartedTransaction        string          missing= 99.8% unique=14     ['%22case%22: %22uppercase%22', '{""rs"":""false""', '{"sk":"NotStartedTransaction#0000000010PRTH9FFCY7K']  <- JSON/list jesa lagta hai
+Panellist                    string          missing= 79.5% unique=1173   ['{"sk":"Panellist#000000000GJZDTG56N34DZP205","ref_', '{"sk":"Panellist#0000000010NTYMTY1WKHPJ07WE","crea', '{"sk":"Panellist#000000000GCBT4MXAEFERV9EP6","ref_']  <- JSON/list jesa lagta hai
+Reward                       string          missing=  6.4% unique=5365   ['{"sk":"Reward#000000000GP9G70RKA2V5WXN5B","ref_pro', '{"sk":"Reward#000000000GP9G70RKA2V5WXN5B","ref_pro', '{"sk":"Reward#000000000GP9G70RKA2V5WXN5B","ref_pro']  <- JSON/list jesa lagta hai
+role                         string          missing= 67.0% unique=429    ['Facilitator', 'Social Media Analyst', 'Tester']
+role_responsibility          string          missing= 81.2% unique=88     ['<html><body><ul><li>Leading and mentoring a group ', 'Testing and debugging', 'TTT']
+short_description            string          missing=  0.1% unique=838    ['Express yourself in 50-words!', 'In this role you be impacting young lives while ga', 'Short Description, Explore hands-on defensive hack']
+summary                      string          missing= 96.5% unique=85     ['cc', 'ee', 'eeeee']
+Testimonial                  string          missing= 85.2% unique=851    ['{"sk":"Testimonial#0000000010RY2C6SEZQ3HGA9CM","re', '{"sk":"Testimonial#0000000010D46TNR53M1VB684P","re', '{"sk":"Testimonial#00000000103FKJAPTGDJ3E9MBV","re']  <- JSON/list jesa lagta hai
+tracking_questions           string          missing= 19.3% unique=4625   ['{"code":"Team","is_required_for_badge_award":"true', '{"serial_number":"1","code":"QYC01K5","is_required', '{"serial_number":"1","is_required_for_badge_award"']  <- JSON/list jesa lagta hai
+
+======================================================================
+APPLICATIONS: None
+======================================================================
+File nahi mili (sign-up / completion / lead-source ke liye ye file chahiye).
