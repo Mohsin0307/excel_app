@@ -12,7 +12,7 @@ Definitions (stakeholders ke liye):
 import numpy as np
 import pandas as pd
 
-import config as cfg
+from . import config as cfg
 
 
 # ----------------------------------------------------------------------
@@ -158,6 +158,15 @@ def opportunities_by_lead_source(opps, apps):
     return t.sort_values("opportunities", ascending=False), basis
 
 
+def top_other(df, label, value, n=10):
+    """Bohat saari categories ko top-n + 'Other' mein samet do (pie chart padhne layak rahe)."""
+    if len(df) <= n:
+        return df
+    d = df.sort_values(value, ascending=False)
+    other = pd.DataFrame({label: ["Other"], value: [d.iloc[n:][value].sum()]})
+    return pd.concat([d.head(n), other], ignore_index=True)
+
+
 def lead_source_performance(apps):
     if not has_app_source(apps):
         return None
@@ -224,7 +233,7 @@ def quarter_compare(opps, apps, a=None, b=None):
 # ----------------------------------------------------------------------
 # insights (rule-based draft; final wording insaan ko review karni chahiye)
 # ----------------------------------------------------------------------
-def build_insights(opps, apps, min_signups=None, n=None):
+def build_insights(opps, apps, min_signups=None, n=None, qa=None, qb=None):
     min_signups = min_signups or cfg.MIN_SIGNUPS_FOR_RATE
     n = n or cfg.TOP_N
     perf = opportunity_performance(opps, apps)
@@ -256,17 +265,22 @@ def build_insights(opps, apps, min_signups=None, n=None):
                     f"**{low_c.iloc[0].label}** ({low_c.iloc[0].completion_rate * 100:.1f}%).",
                     "Investigate the weakest ones: duration, difficulty, fee, reminders and drop-off point.")
 
-        lp = lead_source_performance(apps)
+        lp_all = lead_source_performance(apps)
+        lp = lp_all[lp_all.lead_source != "Unknown"] if lp_all is not None else None
         if lp is not None and len(lp):
+            unk = lp_all[lp_all.lead_source == "Unknown"].share_pct.sum()
             big = lp.iloc[0]
-            msg = f"**{big.lead_source}** is the largest lead source ({big.applications:,} applications, {big.share_pct:.1f}%)."
+            msg = f"**{big.lead_source}** is the largest known lead source ({big.applications:,} applications, {big.share_pct:.1f}% of all)."
             act = None
+            if unk >= 20:
+                msg += f" {unk:.1f}% of applications have no lead source recorded."
+                act = "Make 'how did you hear about us' mandatory so channel performance can be measured reliably."
             if completion_available(apps):
                 el = lp[lp.applications >= min_signups]
                 if len(el):
                     bc = el.sort_values("completion_rate", ascending=False).iloc[0]
                     msg += f" Best completion rate: **{bc.lead_source}** ({bc.completion_rate * 100:.1f}%)."
-                    if bc.lead_source != big.lead_source:
+                    if bc.lead_source != big.lead_source and act is None:
                         act = f"Volume and quality come from different sources: shift some effort toward {bc.lead_source}."
             add(msg, act)
 
@@ -276,13 +290,14 @@ def build_insights(opps, apps, min_signups=None, n=None):
         hi, lo = l7.loc[l7["count"].idxmax()], l7.loc[l7["count"].idxmin()]
         add(f"{basis} over the last {len(l7)} active dates: busiest {hi.date} ({hi['count']:,}), quietest {lo.date} ({lo['count']:,}).")
 
-    qc = quarter_compare(opps, apps)
+    qa, qb = qa or cfg.COMPARE_FROM, qb or cfg.COMPARE_TO
+    qc = quarter_compare(opps, apps, qa, qb)
     first = qc.iloc[0]
     ch = first["change"]
     if pd.notna(ch):
         word = "grew" if ch > 0 else "fell" if ch < 0 else "was flat"
-        add(f"{first['metric']} {word} {abs(ch):.1f}% from {cfg.COMPARE_FROM} to {cfg.COMPARE_TO} "
-            f"({first[cfg.COMPARE_FROM]:,.0f} -> {first[cfg.COMPARE_TO]:,.0f}).",
+        add(f"{first['metric']} {word} {abs(ch):.1f}% from {qa} to {qb} "
+            f"({first[qa]:,.0f} -> {first[qb]:,.0f}).",
             "Find what drove the drop (channels, seasonality, fewer new opportunities) before planning the next quarter."
             if ch < -10 else None)
 
@@ -308,71 +323,10 @@ def build_insights(opps, apps, min_signups=None, n=None):
     return out
 
 
-def insights_markdown(opps, apps):
+def insights_markdown(opps, apps, **kw):
     lines = ["# Insights and recommendations (auto-generated draft)\n"]
-    for f, a in build_insights(opps, apps):
+    for f, a in build_insights(opps, apps, **kw):
         lines.append(f"- {f}")
         if a:
             lines.append(f"  - **Action:** {a}")
     return "\n".join(lines) + "\n"
-
-    """
-Sirf yahi file edit karni hai. Baqi code is config ko parh kar chalta hai.
-
-Folder:
-    opportunity_dashboard/
-        data/opportunities.xlsx      <- aap ki 33-column file
-        data/applications.xlsx       <- (optional) har sign-up/application ki ek row
-"""
-from pathlib import Path
-
-BASE = Path(__file__).resolve().parent
-DATA_DIR = BASE / "data"
-OUT_DIR = BASE / "output"
-
-# ---- Files ----------------------------------------------------------
-# None = auto-detect. Auto-detect: data/ mein jis file ke naam mein "application" ya
-# "signup" ho wo applications file hai, pehli baqi file opportunities file hai.
-OPP_FILE = None          # e.g. "opportunities.xlsx"
-OPP_SHEET = 0            # sheet ka naam ya number
-APP_FILE = None          # e.g. "applications.xlsx"  (ya wohi file, alag sheet ke saath)
-APP_SHEET = 0
-
-# ---- Opportunities file: column mapping -----------------------------
-# Value = aap ki file ka column name (capital/space ka farq chalta hai). Nahi hai to None.
-OPP_COLS = {
-    "id": "opportunity_id",
-    "name": "name",
-    "category": "category",
-    "created": "created_at",
-    "archived": "is_archived",
-    "reward": "Reward",
-    "scholarship": "microscholarship",
-    "lead_source": None,     # agar opportunities file mein lead source column ho
-}
-
-# ---- Applications file: column mapping ------------------------------
-# Value list ho to pehla non-empty column use hota hai (coalesce).
-APP_COLS = {
-    # "auto" = code khud dhoondta hai ke applications ka kaun sa column opportunities se match karta hai
-    # (relation_id / work_item_sk / sk / pk ...). Pata ho to column ka naam likh do.
-    "opportunity_id": "auto",
-    "date": ["apply_date", "created_at"],         # sign-up ki date
-    "id": "application_id",                       # unique application id (duplicates hatane ke liye)
-    "modified": "modified_at",                    # duplicate id mile to sab se naya record rakhta hai
-    "status": "status",
-    "completion_date": "completion_date",         # ye bhari ho to application "completed" maani jati hai
-    "completed": None,                            # ya True/False column jo completion batata ho
-    "lead_source": ["from_where_did_you_hear_about_us",
-                    "how_did_you_hear_about_this_opportunity",
-                    "from_which_medium_did_you_hear_about_the_internship"],
-}
-COMPLETED_VALUES = ["completed", "complete", "finished", "graduated", "passed"]  # sirf tab jab completion_date na ho
-# "auto" join ke liye opportunities side ke columns jin se match try hoga
-OPP_JOIN_COLS = ["opp_id", "pk"]
-
-# ---- Dashboard settings ---------------------------------------------
-MIN_SIGNUPS_FOR_RATE = 10    # is se kam sign-ups wali opportunity ka completion rate rank mein nahi
-TOP_N = 10
-COMPARE_FROM = "2025Q4"
-COMPARE_TO = "2026Q1"

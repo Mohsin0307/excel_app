@@ -1,4 +1,8 @@
-pandas
-openpyxl
-plotly
-streamlit
+streamlit>=1.36
+pandas>=2.0
+numpy>=1.24
+scipy>=1.11
+plotly>=5.20
+openpyxl>=3.1
+xlrd>=2.0.1
+pytest>=8.0

@@ -1,50 +1,4 @@
 """
-Pehla step: apni files ka profile dekho (har column ki dtype, missing, sample values).
-Chalao:  python profile_data.py      -> output/data_profile.txt bhi banta hai.
-Ye output mujhe bhej do to main config.py ki mapping sahi kar dunga.
-"""
-import pandas as pd
-
-import config as cfg
-import data_prep as dp
-
-cfg.OUT_DIR.mkdir(parents=True, exist_ok=True)
-lines = []
-
-
-def out(s=""):
-    print(s)
-    lines.append(s)
-
-
-opp_path, app_path = dp.find_files()
-for title, path, sheet, mapping in [("OPPORTUNITIES", opp_path, cfg.OPP_SHEET, cfg.OPP_COLS),
-                                    ("APPLICATIONS", app_path, cfg.APP_SHEET, cfg.APP_COLS)]:
-    out(f"{'=' * 70}\n{title}: {path}\n{'=' * 70}")
-    if path is None:
-        out("File nahi mili (sign-up / completion / lead-source ke liye ye file chahiye).")
-        continue
-    df = dp._clean_text(dp._read(path, sheet))
-    out(f"Shape: {df.shape[0]:,} rows x {df.shape[1]} columns\n")
-    out("-- config mapping check --")
-    for key, name in mapping.items():
-        found = dp._resolve(df, name)
-        out(f"  {key:15s} -> {str(name):22s} {'OK' if found else ('(not mapped)' if not name else 'NOT FOUND')}")
-    out("\n-- columns --")
-    for c in df.columns:
-        s = df[c]
-        vals = s.dropna().astype(str).drop_duplicates().head(3).str.slice(0, 50).tolist()
-        flag = ""
-        txt = s.dropna().astype(str).head(200)
-        if txt.str.startswith(("{", "[")).mean() > 0.5:
-            flag = "  <- JSON/list jesa lagta hai"
-        elif txt.str.contains("<[a-z]+", regex=True).mean() > 0.3:
-            flag = "  <- HTML hai"
-        out(f"{c:28s} {str(s.dtype):15s} missing={s.isna().mean() * 100:5.1f}% unique={s.nunique():<6d} {vals}{flag}")
-    out()
-
-(cfg.OUT_DIR / "data_profile.txt").write_text("\n".join(lines), encoding="utf-8")
-"""
 Sirf yahi file edit karni hai. Baqi code is config ko parh kar chalta hai.
 
 Folder:
@@ -52,11 +6,14 @@ Folder:
         data/opportunities.xlsx      <- aap ki 33-column file
         data/applications.xlsx       <- (optional) har sign-up/application ki ek row
 """
+import threading
+from contextlib import contextmanager
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
-DATA_DIR = BASE / "data"
-OUT_DIR = BASE / "output"
+# data/ aur output/ repo root par hain (app ke saath), presets/ folder ke andar nahi.
+DATA_DIR = BASE.parents[1] / "data"
+OUT_DIR = BASE.parents[1] / "output"
 
 # ---- Files ----------------------------------------------------------
 # None = auto-detect. Auto-detect: data/ mein jis file ke naam mein "application" ya
@@ -104,3 +61,22 @@ MIN_SIGNUPS_FOR_RATE = 10    # is se kam sign-ups wali opportunity ka completion
 TOP_N = 10
 COMPARE_FROM = "2025Q4"
 COMPARE_TO = "2026Q1"
+
+
+# ---- UI se mapping badalne ke liye (thread-safe, kaam ke baad purani values wapas) ---------
+_LOCK = threading.RLock()
+
+
+@contextmanager
+def override(opp_cols=None, app_cols=None):
+    with _LOCK:
+        old_o, old_a = dict(OPP_COLS), dict(APP_COLS)
+        try:
+            if opp_cols:
+                OPP_COLS.update(opp_cols)
+            if app_cols:
+                APP_COLS.update(app_cols)
+            yield
+        finally:
+            OPP_COLS.clear(); OPP_COLS.update(old_o)
+            APP_COLS.clear(); APP_COLS.update(old_a)
